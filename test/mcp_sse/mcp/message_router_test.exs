@@ -10,49 +10,49 @@ defmodule MCP.MessageRouterTest do
     @behaviour MCPServer
 
     @impl true
-    def handle_ping(request_id) do
+    def handle_ping(_session_id, request_id) do
       {:ok, %{jsonrpc: "2.0", id: request_id, result: %{}}}
     end
 
     @impl true
-    def handle_initialize(request_id, params) do
+    def handle_initialize(_session_id, request_id, params) do
       capabilities = params["capabilities"]
       {:ok, %{jsonrpc: "2.0", id: request_id, result: %{"capabilities" => capabilities}}}
     end
 
     @impl true
-    def handle_complete(request_id, _params) do
+    def handle_complete(_session_id, request_id, _params) do
       {:ok, %{jsonrpc: "2.0", id: request_id, result: %{completion: %{}}}}
     end
 
     @impl true
-    def handle_list_prompts(request_id, _params) do
+    def handle_list_prompts(_session_id, request_id, _params) do
       {:ok, %{jsonrpc: "2.0", id: request_id, result: %{prompts: []}}}
     end
 
     @impl true
-    def handle_get_prompt(request_id, params) do
+    def handle_get_prompt(_session_id, request_id, params) do
       name = params["name"]
       {:ok, %{jsonrpc: "2.0", id: request_id, result: %{"description" => name}}}
     end
 
     @impl true
-    def handle_list_resources(request_id, _params) do
+    def handle_list_resources(_session_id, request_id, _params) do
       {:ok, %{jsonrpc: "2.0", id: request_id, result: %{resources: []}}}
     end
 
     @impl true
-    def handle_read_resource(request_id, _params) do
+    def handle_read_resource(_session_id, request_id, _params) do
       {:ok, %{jsonrpc: "2.0", id: request_id, result: %{contents: []}}}
     end
 
     @impl true
-    def handle_list_tools(request_id, _params) do
+    def handle_list_tools(_session_id, request_id, _params) do
       {:ok, %{jsonrpc: "2.0", id: request_id, result: %{tools: []}}}
     end
 
     @impl true
-    def handle_call_tool(request_id, _params) do
+    def handle_call_tool(_session_id, request_id, _params) do
       {:ok, %{jsonrpc: "2.0", id: request_id, result: %{content: []}}}
     end
   end
@@ -69,22 +69,26 @@ defmodule MCP.MessageRouterTest do
 
   describe "handle_message/1" do
     test "handles initialized notification" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "notifications/initialized",
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, nil} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, nil} = MCP.MessageRouter.handle_message(session_id, message)
     end
 
     test "handles ping request" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "ping",
         "id" => "123",
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, response} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, response} = MCP.MessageRouter.handle_message(session_id, message)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.id == "123"
@@ -92,6 +96,8 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "handles initialize request" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "initialize",
         "id" => "456",
@@ -101,7 +107,7 @@ defmodule MCP.MessageRouterTest do
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, response} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, response} = MCP.MessageRouter.handle_message(session_id, message)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.id == "456"
@@ -109,6 +115,8 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "handles completion/complete request" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "completion/complete",
         "id" => "789",
@@ -116,7 +124,7 @@ defmodule MCP.MessageRouterTest do
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, response} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, response} = MCP.MessageRouter.handle_message(session_id, message)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.id == "789"
@@ -124,6 +132,8 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "handles prompts/list request" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "prompts/list",
         "id" => "789",
@@ -131,7 +141,7 @@ defmodule MCP.MessageRouterTest do
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, response} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, response} = MCP.MessageRouter.handle_message(session_id, message)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.id == "789"
@@ -139,6 +149,8 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "handles prompts/get request" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "prompts/get",
         "id" => "789",
@@ -148,7 +160,7 @@ defmodule MCP.MessageRouterTest do
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, response} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, response} = MCP.MessageRouter.handle_message(session_id, message)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.id == "789"
@@ -156,6 +168,8 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "handles resources/list request" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "resources/list",
         "id" => "789",
@@ -163,7 +177,7 @@ defmodule MCP.MessageRouterTest do
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, response} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, response} = MCP.MessageRouter.handle_message(session_id, message)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.id == "789"
@@ -171,6 +185,8 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "handles resources/read request" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "resources/read",
         "id" => "789",
@@ -180,7 +196,7 @@ defmodule MCP.MessageRouterTest do
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, response} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, response} = MCP.MessageRouter.handle_message(session_id, message)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.id == "789"
@@ -188,6 +204,8 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "handles tools/list request" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "tools/list",
         "id" => "789",
@@ -195,7 +213,7 @@ defmodule MCP.MessageRouterTest do
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, response} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, response} = MCP.MessageRouter.handle_message(session_id, message)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.id == "789"
@@ -203,6 +221,8 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "handles tools/call request" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "tools/call",
         "id" => "101",
@@ -212,7 +232,7 @@ defmodule MCP.MessageRouterTest do
         "jsonrpc" => "2.0"
       }
 
-      assert {:ok, response} = MCP.MessageRouter.handle_message(message)
+      assert {:ok, response} = MCP.MessageRouter.handle_message(session_id, message)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.id == "101"
@@ -220,6 +240,8 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "returns method not found error for unsupported method" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "method" => "unsupported_method",
         "id" => "999",
@@ -228,7 +250,7 @@ defmodule MCP.MessageRouterTest do
 
       log =
         capture_log(fn ->
-          assert {:error, response} = MCP.MessageRouter.handle_message(message)
+          assert {:error, response} = MCP.MessageRouter.handle_message(session_id, message)
           assert JsonRpcSchema.valid?(JsonRpcSchema.error_schema(), response)
 
           assert response.id == "999"
@@ -241,13 +263,15 @@ defmodule MCP.MessageRouterTest do
     end
 
     test "returns invalid request error for malformed message" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
+
       message = %{
         "invalid" => "message"
       }
 
       log =
         capture_log(fn ->
-          assert {:error, response} = MCP.MessageRouter.handle_message(message)
+          assert {:error, response} = MCP.MessageRouter.handle_message(session_id, message)
           assert JsonRpcSchema.valid?(JsonRpcSchema.error_schema(), response)
 
           assert response.id == nil

@@ -10,9 +10,10 @@ defmodule MCP.DefaultServerTest do
 
   describe "handle_ping/1" do
     test "returns pong response" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
       request_id = "ping-1"
 
-      assert {:ok, response} = DefaultServer.handle_ping(request_id)
+      assert {:ok, response} = DefaultServer.handle_ping(session_id, request_id)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.jsonrpc == "2.0"
@@ -23,6 +24,7 @@ defmodule MCP.DefaultServerTest do
 
   describe "handle_initialize/2" do
     test "accepts valid protocol version" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
       request_id = "init-1"
 
       params = %{
@@ -32,7 +34,7 @@ defmodule MCP.DefaultServerTest do
         }
       }
 
-      assert {:ok, response} = DefaultServer.handle_initialize(request_id, params)
+      assert {:ok, response} = DefaultServer.handle_initialize(session_id, request_id, params)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.jsonrpc == "2.0"
@@ -44,6 +46,7 @@ defmodule MCP.DefaultServerTest do
     end
 
     test "rejects invalid protocol version" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
       request_id = "init-2"
 
       params = %{
@@ -53,11 +56,12 @@ defmodule MCP.DefaultServerTest do
         }
       }
 
-      assert {:error, reason} = DefaultServer.handle_initialize(request_id, params)
+      assert {:error, reason} = DefaultServer.handle_initialize(session_id, request_id, params)
       assert reason =~ "Unsupported protocol version"
     end
 
     test "requires protocol version" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
       request_id = "init-3"
 
       params = %{
@@ -66,17 +70,18 @@ defmodule MCP.DefaultServerTest do
         }
       }
 
-      assert {:error, reason} = DefaultServer.handle_initialize(request_id, params)
+      assert {:error, reason} = DefaultServer.handle_initialize(session_id, request_id, params)
       assert reason == "Protocol version is required"
     end
   end
 
   describe "handle_list_tools/2" do
     test "returns list of available tools" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
       request_id = "tools-1"
       params = %{}
 
-      assert {:ok, response} = DefaultServer.handle_list_tools(request_id, params)
+      assert {:ok, response} = DefaultServer.handle_list_tools(session_id, request_id, params)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.jsonrpc == "2.0"
@@ -93,6 +98,7 @@ defmodule MCP.DefaultServerTest do
 
   describe "handle_call_tool/2" do
     test "handles upcase tool correctly" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
       request_id = "tool-1"
 
       params = %{
@@ -102,7 +108,7 @@ defmodule MCP.DefaultServerTest do
         }
       }
 
-      assert {:ok, response} = DefaultServer.handle_call_tool(request_id, params)
+      assert {:ok, response} = DefaultServer.handle_call_tool(session_id, request_id, params)
       assert JsonRpcSchema.valid?(JsonRpcSchema.result_schema(), response)
 
       assert response.jsonrpc == "2.0"
@@ -115,6 +121,7 @@ defmodule MCP.DefaultServerTest do
     end
 
     test "handles unknown tool" do
+      session_id = "test-session-#{:rand.uniform(1000)}"
       request_id = "tool-2"
 
       params = %{
@@ -124,7 +131,9 @@ defmodule MCP.DefaultServerTest do
 
       log =
         capture_log(fn ->
-          assert {:error, response} = DefaultServer.handle_call_tool(request_id, params)
+          assert {:error, response} =
+                   DefaultServer.handle_call_tool(session_id, request_id, params)
+
           assert JsonRpcSchema.valid?(JsonRpcSchema.error_schema(), response)
 
           assert response.jsonrpc == "2.0"
