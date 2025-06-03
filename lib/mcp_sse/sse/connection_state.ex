@@ -8,7 +8,7 @@ defmodule SSE.ConnectionState do
   require Logger
 
   # 30 seconds for initialization
-  @init_timeout 30_000
+  # @init_timeout 30_000
   # 30 minutes in milliseconds
   @inactivity_timeout 30 * 60 * 1000
 
@@ -24,7 +24,7 @@ defmodule SSE.ConnectionState do
   @impl true
   def init(session_id) do
     # Start initialization timeout
-    Process.send_after(self(), :init_timeout, @init_timeout)
+    # Process.send_after(self(), :init_timeout, @init_timeout)
 
     {:ok,
      %{
