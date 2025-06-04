@@ -162,7 +162,9 @@ defmodule SSE.ConnectionPlug do
                 Logger.warning("Error handling message: #{inspect(error_response)}")
                 # Send error response via SSE to match JSON-RPC 2.0 spec
                 send(sse_pid, {:send_sse_message, error_response})
-                conn |> put_status(400) |> send_json(error_response)
+                # we still reply with 202, because some clients abort the connection
+                # when they receive a non-200 response
+                conn |> put_status(202) |> send_json(%{status: "ok"})
             end
           else
             conn |> put_status(202) |> send_json(%{status: "ok"})
