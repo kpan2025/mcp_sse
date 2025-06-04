@@ -50,17 +50,21 @@ defmodule SSE.ConnectionPlug do
 
   # Standard Plug callback
   @doc false
-  def call(%Plug.Conn{request_path: @sse_path} = conn, _opts) do
+  def call(%Plug.Conn{method: "GET", request_path: @sse_path} = conn, _opts) do
     handle_sse(conn)
   end
 
   # Standard Plug callback
   @doc false
-  def call(%Plug.Conn{request_path: @message_path} = conn, _opts) do
+  def call(%Plug.Conn{method: "POST", request_path: @message_path} = conn, _opts) do
     handle_message(conn)
   end
 
-  def call(conn, _opts), do: conn
+  def call(conn, _opts) do
+    conn
+    |> send_resp(405, "Method not allowed")
+    |> halt()
+  end
 
   defp send_json(conn, data) do
     conn
