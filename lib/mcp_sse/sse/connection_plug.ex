@@ -202,13 +202,19 @@ defmodule SSE.ConnectionPlug do
   end
 
   defp send_initial_message(conn, session_id) do
-    endpoint =
-      "#{conn.scheme}://#{conn.host}:#{conn.port}#{@message_path}?sessionId=#{session_id}"
+    endpoint = "#{endpoint_url(conn)}#{@message_path}?sessionId=#{session_id}"
 
     case chunk(conn, "event: endpoint\ndata: #{endpoint}\n\n") do
       {:ok, conn} -> conn
       {:error, :closed} -> conn
     end
+  end
+
+  if Mix.env() in [:test, :dev] do
+    defp endpoint_url(conn), do: "#{conn.scheme}://#{conn.host}:#{conn.port}"
+  else
+    @endpoint_url Application.compile_env(:mcp_sse, :endpoint_url)
+    defp endpoint_url(_conn), do: @endpoint_url
   end
 
   defp start_sse_loop(conn, session_id, state_pid) do
